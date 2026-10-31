@@ -34,7 +34,7 @@ class DemoApplicationTests {
         mockMvc.perform(get("/version"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(
-                        "Application Version: v1"
+                        "Application Version: v2"
                 ));
     }
 }
