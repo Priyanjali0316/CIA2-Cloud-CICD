@@ -1,14 +1,12 @@
-
 pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'priyanjali0316/cia2-cicd-app'
         DOCKER = 'C:\\Users\\0316a\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        DOCKER_IMAGE = 'priyanjali0316/cia2-cicd-app'
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo 'Checking out source code from GitHub'
@@ -18,7 +16,7 @@ pipeline {
 
         stage('Build and Test') {
             steps {
-                echo 'Building the Spring Boot application and running tests'
+                echo 'Building the application and running tests'
                 bat 'mvn -B clean package'
             }
         }
@@ -33,14 +31,13 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image'
-
                 bat '"%DOCKER%" build -t %DOCKER_IMAGE%:%BUILD_NUMBER% -t %DOCKER_IMAGE%:latest .'
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                echo 'Logging in to Docker Hub and pushing image'
+                echo 'Logging in to Docker Hub and pushing the image'
 
                 withCredentials([
                     usernamePassword(
@@ -49,12 +46,10 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-
                     powershell '''
-                        $env:DOCKER_PASSWORD |
-                            & "$env:DOCKER" login `
+                        & "$env:DOCKER" login `
                             --username "$env:DOCKER_USERNAME" `
-                            --password-stdin
+                            --password "$env:DOCKER_PASSWORD"
 
                         if ($LASTEXITCODE -ne 0) {
                             exit $LASTEXITCODE
@@ -62,10 +57,7 @@ pipeline {
                     '''
 
                     bat '"%DOCKER%" push %DOCKER_IMAGE%:%BUILD_NUMBER%'
-
                     bat '"%DOCKER%" push %DOCKER_IMAGE%:latest'
-
-                    bat '"%DOCKER%" logout'
                 }
             }
         }
@@ -73,11 +65,15 @@ pipeline {
 
     post {
         success {
-            echo 'CI pipeline completed successfully! Docker image pushed to Docker Hub.'
+            echo 'CI/CD pipeline completed successfully!'
         }
 
         failure {
-            echo 'Pipeline failed. Check the Console Output for details.'
+            echo 'CI/CD pipeline failed. Check the stage logs for details.'
+        }
+
+        always {
+            echo 'Pipeline execution finished.'
         }
     }
 }
