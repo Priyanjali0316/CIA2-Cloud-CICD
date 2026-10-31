@@ -42,13 +42,24 @@ pipeline {
             steps {
                 echo 'Logging in to Docker Hub and pushing image'
 
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USERNAME',
-                    passwordVariable: 'DOCKER_PASSWORD'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
 
-                    bat 'echo %DOCKER_PASSWORD% | "%DOCKER%" login -u %DOCKER_USERNAME% --password-stdin'
+                    powershell '''
+                        $env:DOCKER_PASSWORD |
+                            & "$env:DOCKER" login `
+                            --username "$env:DOCKER_USERNAME" `
+                            --password-stdin
+
+                        if ($LASTEXITCODE -ne 0) {
+                            exit $LASTEXITCODE
+                        }
+                    '''
 
                     bat '"%DOCKER%" push %DOCKER_IMAGE%:%BUILD_NUMBER%'
 
