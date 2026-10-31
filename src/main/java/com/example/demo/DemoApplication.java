@@ -21,6 +21,6 @@ public class DemoApplication {
 
     @GetMapping("/version")
     public String version() {
-        return "Application Version: v1";
+        return "Application Version: v2";
     }
 }
