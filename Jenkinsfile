@@ -1,11 +1,14 @@
+
 pipeline {
     agent any
 
     environment {
         DOCKER_IMAGE = 'priyanjali0316/cia2-cicd-app'
+        DOCKER = 'C:\\Users\\0316a\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo 'Checking out source code from GitHub'
@@ -22,6 +25,7 @@ pipeline {
 
         stage('Archive Artifacts') {
             steps {
+                echo 'Archiving the generated JAR file'
                 archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
@@ -29,21 +33,28 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image'
-                bat 'docker build -t %DOCKER_IMAGE%:%BUILD_NUMBER% -t %DOCKER_IMAGE%:latest .'
+
+                bat '"%DOCKER%" build -t %DOCKER_IMAGE%:%BUILD_NUMBER% -t %DOCKER_IMAGE%:latest .'
             }
         }
 
         stage('Push Docker Image') {
             steps {
+                echo 'Logging in to Docker Hub and pushing image'
+
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-creds',
                     usernameVariable: 'DOCKER_USERNAME',
                     passwordVariable: 'DOCKER_PASSWORD'
                 )]) {
-                    bat 'echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin'
-                    bat 'docker push %DOCKER_IMAGE%:%BUILD_NUMBER%'
-                    bat 'docker push %DOCKER_IMAGE%:latest'
-                    bat 'docker logout'
+
+                    bat 'echo %DOCKER_PASSWORD% | "%DOCKER%" login -u %DOCKER_USERNAME% --password-stdin'
+
+                    bat '"%DOCKER%" push %DOCKER_IMAGE%:%BUILD_NUMBER%'
+
+                    bat '"%DOCKER%" push %DOCKER_IMAGE%:latest'
+
+                    bat '"%DOCKER%" logout'
                 }
             }
         }
