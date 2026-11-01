@@ -1,8 +1,11 @@
+
 pipeline {
     agent any
 
     environment {
         DOCKER = 'C:\\Users\\0316a\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        KUBECTL = 'C:\\Users\\0316a\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\kubectl.exe'
+        KUBECONFIG = 'C:\\Users\\0316a\\.kube\\config'
         DOCKER_IMAGE = 'priyanjali0316/cia2-cicd-app'
     }
 
@@ -59,6 +62,19 @@ pipeline {
                     bat '"%DOCKER%" push %DOCKER_IMAGE%:%BUILD_NUMBER%'
                     bat '"%DOCKER%" push %DOCKER_IMAGE%:latest'
                 }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo 'Deploying the current build to Minikube'
+
+                bat '''
+                    "%KUBECTL%" --kubeconfig "%KUBECONFIG%" apply -f k8s\\deployment.yaml
+                    "%KUBECTL%" --kubeconfig "%KUBECONFIG%" apply -f k8s\\service.yaml
+                    "%KUBECTL%" --kubeconfig "%KUBECONFIG%" set image deployment/cia2-cicd-app cia2-cicd-app=%DOCKER_IMAGE%:%BUILD_NUMBER%
+                    "%KUBECTL%" --kubeconfig "%KUBECONFIG%" rollout status deployment/cia2-cicd-app --timeout=180s
+                '''
             }
         }
     }
