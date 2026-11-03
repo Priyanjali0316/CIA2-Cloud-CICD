@@ -1,0 +1,39 @@
+
+---
+- name: Deploy application to Azure Kubernetes Service
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    deployment_name: cia2-cicd-app
+    container_name: cia2-cicd-app
+    namespace: default
+    image: "{{ lookup('env', 'ACR_LOGIN_SERVER') }}/{{ lookup('env', 'IMAGE_NAME') }}:{{ lookup('env', 'IMAGE_TAG') }}"
+
+  tasks:
+    - name: Update application image in AKS
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - set
+          - image
+          - "deployment/{{ deployment_name }}"
+          - "{{ container_name }}={{ image }}"
+          - --namespace
+          - "{{ namespace }}"
+      environment:
+        KUBECONFIG: "{{ lookup('env', 'KUBECONFIG') }}"
+
+    - name: Wait for rollout to complete
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - rollout
+          - status
+          - "deployment/{{ deployment_name }}"
+          - --namespace
+          - "{{ namespace }}"
+          - --timeout=180s
+      environment:
+        KUBECONFIG: "{{ lookup('env', 'KUBECONFIG') }}"
