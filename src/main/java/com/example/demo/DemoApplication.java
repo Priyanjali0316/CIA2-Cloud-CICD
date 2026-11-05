@@ -16,7 +16,7 @@ public class DemoApplication {
 
     @GetMapping("/")
     public String home() {
-        return "Welcome to my Cloud-Based CI/CD Pipeline!";
+        return "Welcome to my Cloud-Based CI/CD Pipeline! Version 2 - Automated Deployment Successful!";
     }
 
     @GetMapping("/version")
