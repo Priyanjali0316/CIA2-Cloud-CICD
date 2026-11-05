@@ -24,7 +24,7 @@ class DemoApplicationTests {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(
-                        "Welcome to my Cloud-Based CI/CD Pipeline!"
+                        "Welcome to my Cloud-Based CI/CD Pipeline! Version 2 - Automated Deployment Successful!"
                 ));
     }
 
